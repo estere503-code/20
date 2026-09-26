@@ -1,16 +1,6 @@
-export type EmployeeName = 'Richard'|'Anastasia'|'Jean-Claude'|'Kevin'|'Svetlana';
-export const COMMISSION_RATE = 0.10;
-export const splitWeights: Record<EmployeeName, number> = { Richard: 0.35, Anastasia: 0.25, 'Jean-Claude': 0.20, Kevin: 0.20, Svetlana: 0 };
-const priority: EmployeeName[] = ['Richard','Anastasia','Jean-Claude','Kevin','Svetlana'];
-export function calculateCommission(amount: number, weights = splitWeights) {
-  const pool = Math.round(amount * COMMISSION_RATE * 100) / 100;
-  const raw = priority.map(name => ({ name, value: pool * (weights[name] ?? 0) }));
-  const rounded = raw.map(x => ({ ...x, value: Math.floor(x.value * 100) / 100 }));
-  let remainder = Math.round((pool - rounded.reduce((s,x)=>s+x.value,0))*100);
-  const largest = [...priority].sort((a,b)=>(weights[b]??0)-(weights[a]??0) || priority.indexOf(a)-priority.indexOf(b))[0];
-  const target = rounded.find(x=>x.name===largest)!;
-  target.value = Math.round((target.value + remainder / 100) * 100) / 100;
-  return { pool, splits: Object.fromEntries(rounded.map(x=>[x.name,x.value])) as Record<EmployeeName,number> };
-}
-export function calculateCompanyResult(sales: number, commissions: number, expenses: number) { return Math.round((sales-commissions-expenses)*100)/100; }
-export function calculateProjectResult(sales: number, commissions: number, expenses: number) { return calculateCompanyResult(sales,commissions,expenses); }
+export type Salesperson='Richard'|'Anastasia'|'Jean-Claude';
+export const salespeople:Salesperson[]=['Richard','Anastasia','Jean-Claude'];
+export type Split=Record<Salesperson,number>;
+export function validateSplit(s:Partial<Split>):s is Split { return salespeople.every(n=>Number.isFinite(Number(s[n]))&&Number(s[n])>=0&&Number(s[n])<=100)&&Math.round(salespeople.reduce((a,n)=>a+Number(s[n]),0)*100)===10000; }
+export function calculateCommission(amount:number,split:Split){const pool=Math.round(amount*0.1*100)/100;const raw=salespeople.map(n=>({name:n,value:pool*split[n]/100}));const out=Object.fromEntries(raw.map(x=>[x.name,Math.floor(x.value*100)/100])) as Split;const remainder=Math.round((pool-Object.values(out).reduce((a,b)=>a+b,0))*100)/100;const winner=[...salespeople].sort((a,b)=>split[b]-split[a]||salespeople.indexOf(a)-salespeople.indexOf(b))[0];out[winner]=Math.round((out[winner]+remainder)*100)/100;return {pool,amounts:out};}
+export function companyResult(sales:number,commission:number,expenses:number){return Math.round((sales-commission-expenses)*100)/100;}
