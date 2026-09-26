@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
-import {calculateCommission,salespeople,Salesperson} from '@/lib/calculations';
+import {calculateCommission,salespeople} from '@/lib/calculations';
 type Tx={id:string;reference:string;kind:'sale'|'expense';amount:number;customer?:string;description:string;category?:string;status:string;employee?:{name:string;telegram_chat_id?:number};project?:{name:string};proposed_split:Record<string,number>;approved_split?:Record<string,number>;commission_pool:number;commission_amounts?:Record<string,number>;proposed_allocation?:string;approved_allocation?:string;notification_status:string;sync_status:string};
 const roles=['Richard','Anastasia','Jean-Claude','Kevin','Svetlana']; const money=(n:number)=>new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR'}).format(n||0);
 export default function Home(){const [role,setRole]=useState('Svetlana');const [tab,setTab]=useState('summary');const [kind,setKind]=useState<'sale'|'expense'>('sale');const [form,setForm]=useState<any>({reference:'',customer:'',description:'',amount:'',project:'Project A',category:'Materials',allocation:'Project A',Richard:50,Anastasia:30,'Jean-Claude':20});const [tx,setTx]=useState<Tx[]>([]);const [employees,setEmployees]=useState<any[]>([]);const [message,setMessage]=useState('');
