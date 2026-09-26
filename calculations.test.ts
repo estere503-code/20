@@ -1,0 +1,2 @@
+import {describe,expect,it} from 'vitest'; import {calculateCompanyResult,calculateCommission} from '../lib/calculations';
+describe('finance rules',()=>{it('allocates commission with cents balanced',()=>{const c=calculateCommission(1000);expect(c.pool).toBe(100);expect(Object.values(c.splits).reduce((a,b)=>a+b,0)).toBe(100)});it('supports Test 1 company result',()=>{expect(calculateCompanyResult(3000,300,300)).toBe(2400)});it('supports Test 2 cumulative company result',()=>{expect(calculateCompanyResult(5000,500,570)).toBe(3930)})});
