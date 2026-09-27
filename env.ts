@@ -1,3 +1,0 @@
-import { z } from 'zod';
-const schema = z.object({ NEXT_PUBLIC_SUPABASE_URL:z.string().url(), SUPABASE_SERVICE_ROLE_KEY:z.string().min(1), TELEGRAM_BOT_TOKEN:z.string().min(1), GOOGLE_SPREADSHEET_ID:z.string().min(1), GOOGLE_SERVICE_ACCOUNT_EMAIL:z.string().email(), GOOGLE_PRIVATE_KEY:z.string().min(1) });
-export function env() { return schema.parse({ NEXT_PUBLIC_SUPABASE_URL:process.env.NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY:process.env.SUPABASE_SERVICE_ROLE_KEY, TELEGRAM_BOT_TOKEN:process.env.TELEGRAM_BOT_TOKEN, GOOGLE_SPREADSHEET_ID:process.env.GOOGLE_SPREADSHEET_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL:process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY:process.env.GOOGLE_PRIVATE_KEY }); }
