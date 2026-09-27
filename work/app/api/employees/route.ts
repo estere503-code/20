@@ -9,8 +9,9 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
   if (body.role !== 'Svetlana') return NextResponse.json({ error: 'Only Svetlana can manage employee links' }, { status: 403 });
-  const telegramUserId = Number(body.telegram_user_id);
-  if (!body.id || !Number.isSafeInteger(telegramUserId)) return NextResponse.json({ error: 'A numeric Telegram user ID is required' }, { status: 400 });
+  const rawId = String(body.telegram_user_id ?? '').trim();
+  const telegramUserId = rawId === '' ? null : Number(rawId);
+  if (!body.id || (telegramUserId !== null && !Number.isSafeInteger(telegramUserId))) return NextResponse.json({ error: 'Enter a numeric Telegram user ID, or leave blank to unlink it' }, { status: 400 });
   const { data, error } = await db().from('employees').update({ telegram_user_id: telegramUserId, telegram_chat_id: telegramUserId }).eq('id', body.id).select().single();
   return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ employee: data });
 }
