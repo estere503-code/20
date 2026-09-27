@@ -1,4 +1,4 @@
-const euro=(value:number)=>new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR'}).format(Number(value)||0);
+const euro=(value:number)=>new Intl.NumberFormat('en-IE',{style:'currency',currency:'EUR',minimumFractionDigits:Number(value)%1===0?0:2,maximumFractionDigits:2}).format(Number(value)||0);
 const pct=(value:number)=>Number(value||0).toString();
 const sameSplit=(a:any,b:any)=>['Richard','Anastasia','Jean-Claude'].every(name=>Number(a?.[name]??0)===Number(b?.[name]??0));
 
