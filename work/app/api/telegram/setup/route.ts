@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 async function register(req: NextRequest, suppliedSecret?: string) {
   const setupSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!setupSecret || suppliedSecret !== setupSecret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!setupSecret) return NextResponse.json({ error: 'Telegram webhook secret is not configured' }, { status: 500 });
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return NextResponse.json({ error: 'Telegram token not configured' }, { status: 500 });
   const webhookUrl = new URL('/api/telegram/webhook', req.url).toString();
