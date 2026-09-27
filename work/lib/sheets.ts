@@ -1,18 +1,6 @@
 import { google } from 'googleapis';
 import { env } from './env';
-
-export async function syncTransaction(row: any) {
-  const e = env();
-  const normalized = e.GOOGLE_PRIVATE_KEY.replace(/\\+n/g, '\n').replace(/\\n/g, '\n').replace(/\r/g, '').trim();
-  const match = normalized.match(/-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----/);
-  const privateKey = (match ? match[0] : normalized).trim();
-  const auth = new google.auth.GoogleAuth({ credentials: { client_email: e.GOOGLE_SERVICE_ACCOUNT_EMAIL, private_key: privateKey }, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
-  const api = google.sheets({ version: 'v4', auth });
-  const spreadsheetId = e.GOOGLE_SPREADSHEET_ID.split('/')[0];
-  const tab = row.kind === 'sale' ? 'Sales' : 'Expenses';
-  const values = row.kind === 'sale' ? [row.reference, row.created_at, row.employee?.name ?? row.employee, row.customer, row.project?.name ?? row.project, row.description, row.amount, JSON.stringify(row.proposed_split), JSON.stringify(row.approved_split ?? {}), JSON.stringify(row.commission_amounts ?? {}), row.status, row.sync_status] : [row.reference, row.created_at, row.employee?.name ?? row.employee, row.description, row.category, row.amount, row.proposed_allocation, row.approved_allocation ?? '', row.status, row.sync_status];
-  const existing = await api.spreadsheets.values.get({ spreadsheetId, range: tab + '!A:A' });
-  const index = (existing.data.values ?? []).findIndex((value: any[]) => value[0] === row.reference);
-  if (index >= 0) await api.spreadsheets.values.update({ spreadsheetId, range: tab + '!A' + (index + 1) + ':' + String.fromCharCode(65 + values.length - 1) + (index + 1), valueInputOption: 'USER_ENTERED', requestBody: { values: [values] } });
-  else await api.spreadsheets.values.append({ spreadsheetId, range: tab + '!A:Z', valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', requestBody: { values: [values] } });
-}
+const salesHeaders=['Reference','Submission time','Salesperson','Customer','Project','Description','Amount','Richard Proposed %','Anastasia Proposed %','Jean-Claude Proposed %','Richard Approved %','Anastasia Approved %','Jean-Claude Approved %','Richard €','Anastasia €','Jean-Claude €','Status','Sync status'];
+const expenseHeaders=['Reference','Submission time','Employee','Description','Category','Amount','Proposed allocation','Approved allocation','Status','Sync status'];
+const col=(n:number)=>{let s='';while(n){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26)}return s};
+export async function syncTransaction(row:any){try{const e=env();const key=e.GOOGLE_PRIVATE_KEY.replace(/\\n/g,'\n');const auth=new google.auth.GoogleAuth({credentials:{client_email:e.GOOGLE_SERVICE_ACCOUNT_EMAIL,private_key:key},scopes:['https://www.googleapis.com/auth/spreadsheets']});const api=google.sheets({version:'v4',auth});const spreadsheetId=e.GOOGLE_SPREADSHEET_ID.split('/')[0];const tab=row.kind==='sale'?'Sales':'Expenses';const headers=row.kind==='sale'?salesHeaders:expenseHeaders;const existing=await api.spreadsheets.values.get({spreadsheetId,range:tab+'!A:Z'});const rows=existing.data.values??[];if(!rows.length||headers.some((h,i)=>rows[0]?.[i]!==h))await api.spreadsheets.values.update({spreadsheetId,range:tab+'!A1:'+col(headers.length)+'1',valueInputOption:'RAW',requestBody:{values:[headers]}});const p=row.proposed_split??{},a=row.approved_split??{},c=row.commission_amounts??{};const values=row.kind==='sale'?[row.reference,row.created_at,row.employee?.name??row.employee??'',row.customer??'',row.project?.name??row.project??'',row.description,row.amount,p.Richard??0,p.Anastasia??0,p['Jean-Claude']??0,a.Richard??'',a.Anastasia??'',a['Jean-Claude']??'',c.Richard??'',c.Anastasia??'',c['Jean-Claude']??'',row.status,row.sync_status]:[row.reference,row.created_at,row.employee?.name??row.employee??'',row.description,row.category??'',row.amount,row.proposed_allocation??'',row.approved_allocation??'',row.status,row.sync_status];const index=rows.findIndex((v:any[])=>v[0]===row.reference);if(index>=0)await api.spreadsheets.values.update({spreadsheetId,range:tab+'!A'+(index+1)+':'+col(values.length)+(index+1),valueInputOption:'USER_ENTERED',requestBody:{values:[values]}});else await api.spreadsheets.values.append({spreadsheetId,range:tab+'!A:'+col(values.length),valueInputOption:'USER_ENTERED',insertDataOption:'INSERT_ROWS',requestBody:{values:[values]}});return {ok:true}}catch(e){return {ok:false,error:e instanceof Error?e.message:'Google Sheets sync failed'}}}
