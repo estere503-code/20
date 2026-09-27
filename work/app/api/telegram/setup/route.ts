@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest) {
+async function register(req: NextRequest, suppliedSecret?: string) {
   const setupSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!setupSecret || req.headers.get('x-telegram-setup-secret') !== setupSecret) {
+  if (!setupSecret || suppliedSecret !== setupSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -15,4 +15,12 @@ export async function POST(req: NextRequest) {
   });
   const result = await telegram.json();
   return NextResponse.json({ webhookUrl, telegram: result }, { status: telegram.ok ? 200 : 502 });
+}
+
+export async function POST(req: NextRequest) {
+  return register(req, req.headers.get('x-telegram-setup-secret') ?? undefined);
+}
+
+export async function GET(req: NextRequest) {
+  return register(req, new URL(req.url).searchParams.get('secret') ?? undefined);
 }
