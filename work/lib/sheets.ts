@@ -3,7 +3,7 @@ import { env } from './env';
 
 export async function syncTransaction(row: any) {
   const e = env();
-  const normalized = e.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/\n/g, '\n').replace(/\r/g, '').trim();
+  const normalized = e.GOOGLE_PRIVATE_KEY.replace(/\\+n/g, '\n').replace(/\\n/g, '\n').replace(/\r/g, '').trim();
   const match = normalized.match(/-----BEGIN PRIVATE KEY-----[\s\S]*?-----END PRIVATE KEY-----/);
   const privateKey = (match ? match[0] : normalized).trim();
   const auth = new google.auth.GoogleAuth({ credentials: { client_email: e.GOOGLE_SERVICE_ACCOUNT_EMAIL, private_key: privateKey }, scopes: ['https://www.googleapis.com/auth/spreadsheets'] });
