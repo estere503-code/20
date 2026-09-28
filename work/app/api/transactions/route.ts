@@ -21,7 +21,7 @@ export async function POST(req:NextRequest){try{
   if(!employees.includes(b.role))return NextResponse.json({error:'Unknown role'},{status:400});
   if(b.kind==='sale'&&!salespeople.includes(b.role))return NextResponse.json({error:'Only salespeople can submit sales'},{status:403});
   if(b.kind==='expense'&&b.role!=='Kevin')return NextResponse.json({error:'Only Kevin can submit expenses'},{status:403});
-  if(!['sale','expense'].includes(b.kind)||!b.reference||!/^([SE])\d{2}$/i.test(b.reference)||!Number.isFinite(Number(b.amount))||Number(b.amount)<=0||!b.description)return NextResponse.json({error:'Reference, positive amount, and description are required'},{status:400});
+  if(!['sale','expense'].includes(b.kind)||!b.reference||!/^([SE])\d+$/i.test(b.reference)||!Number.isFinite(Number(b.amount))||Number(b.amount)<=0||!b.description)return NextResponse.json({error:'Reference, positive amount, and description are required'},{status:400});
   if(b.kind==='sale'&&(!b.customer||!['Project A','Project B'].includes(b.project)||!validateSplit(b.split)))return NextResponse.json({error:'Sales require customer, project, and splits totaling 100%'},{status:400});
   if(b.kind==='expense'&&(!['Materials','Travel','Other'].includes(b.category)||!['Project A','Project B','Company overhead'].includes(b.proposedAllocation)))return NextResponse.json({error:'Expenses require category and allocation'},{status:400});
   const sup=db();
