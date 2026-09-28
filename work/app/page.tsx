@@ -1,6 +1,6 @@
 import InteractiveControls from '@/app/components/InteractiveControls';
 import { salespeople } from '@/lib/calculations';
-import { buildDashboard, type Transaction } from '@/lib/dashboard';
+import { buildDashboard, type Transaction } from '@/lib/dashboard-data';
 import { db } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
