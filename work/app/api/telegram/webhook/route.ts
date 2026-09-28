@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/supabase';
 import { notify } from '@/lib/notifications';
+import { gunzipSync, inflateSync, brotliDecompressSync } from 'node:zlib';
+
+export const runtime = 'nodejs';
+
+async function parseTelegramUpdate(req: NextRequest) {
+  const raw = Buffer.from(await req.arrayBuffer());
+  const encoding = (req.headers.get('content-encoding') ?? '').toLowerCase();
+  let body = raw;
+  try {
+    if (encoding.includes('gzip')) body = gunzipSync(raw);
+    else if (encoding.includes('br')) body = brotliDecompressSync(raw);
+    else if (encoding.includes('deflate')) body = inflateSync(raw);
+  } catch {
+    body = raw;
+  }
+  return JSON.parse(body.toString('utf8'));
+}
 
 export async function POST(req: NextRequest) {
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (!expected || req.headers.get('x-telegram-bot-api-secret-token') !== expected) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const update = await req.json(); const message = update.message;
+    const update = await parseTelegramUpdate(req); const message = update.message;
     if (!message?.text || !message.chat?.id) return NextResponse.json({ ok: true });
     const chatId = Number(message.chat.id); const senderId = Number(message.from?.id ?? -1); const text = String(message.text).trim(); const sup = db();
     if (Number.isInteger(update.update_id)) {
@@ -29,4 +46,10 @@ export async function POST(req: NextRequest) {
     const error='Use S92764 | customer | description | Project A | 500 | 50/30/20 or E92764 | description | Materials | 80 | Project A'; await notify(chatId,error); return NextResponse.json({error},{status:400});
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Webhook failure' }, { status: 500 }); }
 }
-async function proxy(req: NextRequest, body: any) { const url = new URL('/api/transactions', req.url); return fetch(new NextRequest(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })); }
+async function proxy(req: NextRequest, body: any) {
+  const url = new URL('/api/transactions', req.url);
+  const response = await fetch(new NextRequest(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }));
+  const result = await response.json().catch(() => ({ error: 'Transaction request failed' }));
+  if (!response.ok) await notify(body.telegram_chat_id, 'Could not save ' + body.reference + ': ' + (result.error ?? 'transaction request failed'));
+  return NextResponse.json(result, { status: response.status });
+}
